@@ -28,7 +28,9 @@ function ReaderContent() {
     };
 
     return (
-        <div className="flex min-h-screen w-full flex-col items-center justify-center bg-neutral-100 p-2">
+        <div className="flex min-h-screen w-full flex-col items-center bg-neutral-100 p-2">
+            <h1 className="mt-2 text-2xl font-bold">Cosmogonía Paĩ Tavyterã</h1>
+            <p className="mb-4 text-sm text-neutral-600">Poner el celular en horizontal para mejor visualización</p>
             <div ref={containerRef} className="flex w-full justify-center">
                 {error && <div className="p-6 text-center text-red-600">{error}</div>}
                 {loading && <div className="p-8 text-center text-neutral-500">Procesando páginas…</div>}

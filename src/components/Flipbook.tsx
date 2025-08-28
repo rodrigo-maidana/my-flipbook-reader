@@ -75,7 +75,7 @@ export default function Flipbook({ pages }: Props) {
                                 width={p.width}
                                 height={p.height}
                                 alt={idx === 0 ? "Portada" : `Página ${idx}`}
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                style={{ width: "100%", height: "100%", objectFit: "contain" }}
                             />
                         </article>
                     ))}
