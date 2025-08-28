@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { Suspense, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Flipbook from "@/components/Flipbook";
 import { usePdfImages } from "@/hooks/usePdfImages";
 
-export default function ReaderPage() {
+function ReaderContent() {
     const params = useSearchParams();
     const pdf = params.get("file") ?? "/cosmogonia_pai_tavytera.pdf";
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -42,5 +42,13 @@ export default function ReaderPage() {
                 Pantalla completa
             </button>
         </div>
+    );
+}
+
+export default function ReaderPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-neutral-500">Cargando…</div>}>
+            <ReaderContent />
+        </Suspense>
     );
 }
