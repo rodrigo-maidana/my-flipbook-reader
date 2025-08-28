@@ -1,10 +1,12 @@
 // Carga perezosa de pdf.js usando el build legacy (evita módulo ESM del worker)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _pdfjs: any = null;
 
 export async function loadPdfJs() {
     if (_pdfjs) return _pdfjs;
 
     // Import legacy build para compatibilidad amplia
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const lib: any = await import("pdfjs-dist/legacy/build/pdf");
 
     // Apuntar al worker auto-hosteado en /public
@@ -15,6 +17,7 @@ export async function loadPdfJs() {
 }
 
 export async function renderPageToBlobURL(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     page: any,
     targetWidth: number
 ): Promise<{ url: string; width: number; height: number }> {

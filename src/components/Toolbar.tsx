@@ -22,9 +22,10 @@ export default function Toolbar({ onPickFile, onFullscreen }: Props) {
                     </label>
                     <button
                         onClick={onFullscreen}
-                        className="rounded-xl border px-3 py-2 hover:bg-neutral-50"
+                        className="flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-2 text-white text-sm md:text-base shadow hover:bg-indigo-500"
                     >
-                        Pantalla completa
+                        <span className="text-lg">⛶</span>
+                        <span>Pantalla completa</span>
                     </button>
                 </div>
             </div>
