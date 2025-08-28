@@ -1,11 +1,13 @@
 // Carga perezosa de pdf.js usando el build legacy (evita módulo ESM del worker)
-let _pdfjs: any = null;
+import type { PDFPageProxy } from "pdfjs-dist/types/src/display/api";
+
+let _pdfjs: typeof import("pdfjs-dist") | null = null;
 
 export async function loadPdfJs() {
     if (_pdfjs) return _pdfjs;
 
     // Import legacy build para compatibilidad amplia
-    const lib: any = await import("pdfjs-dist/legacy/build/pdf");
+    const lib = await import("pdfjs-dist/legacy/build/pdf");
 
     // Apuntar al worker auto-hosteado en /public
     lib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
@@ -15,7 +17,7 @@ export async function loadPdfJs() {
 }
 
 export async function renderPageToBlobURL(
-    page: any,
+    page: PDFPageProxy,
     targetWidth: number
 ): Promise<{ url: string; width: number; height: number }> {
     const viewport = page.getViewport({ scale: 1 });
