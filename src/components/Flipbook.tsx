@@ -22,8 +22,16 @@ export default function Flipbook({ pages }: Props) {
     const [size, setSize] = useState<{ w: number; h: number }>(() => {
         const first = pages[0];
         const ratio = first.height / first.width;
-        const w = Math.min(900, first.width);
-        return { w, h: Math.round(w * ratio) };
+        let w = Math.min(900, first.width);
+        let h = Math.round(w * ratio);
+        if (typeof window !== "undefined") {
+            const maxH = Math.floor(window.innerHeight * 0.7);
+            if (h > maxH) {
+                h = maxH;
+                w = Math.round(h / ratio);
+            }
+        }
+        return { w, h };
     });
 
     useEffect(() => {
@@ -31,8 +39,14 @@ export default function Flipbook({ pages }: Props) {
             const first = pages[0];
             const ratio = first.height / first.width;
             const maxW = Math.min(first.width, Math.floor(window.innerWidth * 0.9));
-            const w = Math.min(900, Math.max(420, maxW));
-            setSize({ w, h: Math.round(w * ratio) });
+            const maxH = Math.floor(window.innerHeight * 0.7);
+            let w = Math.min(900, Math.max(420, maxW));
+            let h = Math.round(w * ratio);
+            if (h > maxH) {
+                h = maxH;
+                w = Math.round(h / ratio);
+            }
+            setSize({ w, h });
         };
         onResize();
         window.addEventListener("resize", onResize);
