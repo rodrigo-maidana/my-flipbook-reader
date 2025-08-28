@@ -4,14 +4,21 @@ import React, { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { PageImage } from "@/types";
 
-const ReactPageFlip = dynamic(() => import("react-pageflip"), { ssr: false }) as any;
+const ReactPageFlip = dynamic(() => import("react-pageflip"), { ssr: false }) as unknown as typeof import("react-pageflip").default;
 
 type Props = {
     pages: PageImage[];
 };
 
+interface FlipBookHandle {
+    pageFlip(): {
+        flipPrev: () => void;
+        flipNext: () => void;
+    };
+}
+
 export default function Flipbook({ pages }: Props) {
-    const bookRef = useRef<any>(null);
+    const bookRef = useRef<FlipBookHandle | null>(null);
     const [size, setSize] = useState<{ w: number; h: number }>(() => {
         const first = pages[0];
         const ratio = first.height / first.width;
@@ -40,6 +47,7 @@ export default function Flipbook({ pages }: Props) {
                     width={size.w}
                     height={size.h}
                     showCover
+                    usePortrait={false}
                     flippingTime={700}
                     maxShadowOpacity={0.5}
                     className="flipbook"
@@ -50,7 +58,7 @@ export default function Flipbook({ pages }: Props) {
                                 src={p.url}
                                 width={p.width}
                                 height={p.height}
-                                alt={`Página ${idx + 1}`}
+                                alt={idx === 0 ? "Portada" : `Página ${idx}`}
                                 style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
                         </article>
