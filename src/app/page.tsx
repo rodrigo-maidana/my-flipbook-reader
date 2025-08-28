@@ -25,7 +25,9 @@ export default function Page() {
   const enterFullscreen = () => {
     const el = containerRef.current;
     if (!el) return;
-    if ((el as any).requestFullscreen) (el as any).requestFullscreen();
+    if (el.requestFullscreen) {
+      el.requestFullscreen();
+    }
   };
 
   return (
@@ -39,7 +41,7 @@ export default function Page() {
 
         <div
           ref={containerRef}
-          className="mx-auto w-full overflow-hidden rounded-2xl border bg-white p-2 shadow-sm"
+          className="mx-auto flex w-full justify-center rounded-2xl border bg-white p-2 shadow-sm"
         >
           {error && <div className="p-6 text-center text-red-600">{error}</div>}
           {loading && <div className="p-8 text-center text-neutral-500">Procesando páginas…</div>}

@@ -81,18 +81,18 @@ export default function Flipbook({ pages }: Props) {
                     ))}
                 </ReactPageFlip>
 
-                <div className="mt-3 flex items-center justify-center gap-2">
+                <div className="mt-4 flex items-center justify-center gap-4">
                     <button
-                        className="rounded-xl border px-3 py-2 hover:bg-neutral-50"
+                        className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500"
                         onClick={() => bookRef.current?.pageFlip().flipPrev()}
                     >
-                        ◀︎ Anterior
+                        ◀︎ <span className="hidden sm:inline">Anterior</span>
                     </button>
                     <button
-                        className="rounded-xl border px-3 py-2 hover:bg-neutral-50"
+                        className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500"
                         onClick={() => bookRef.current?.pageFlip().flipNext()}
                     >
-                        Siguiente ▶︎
+                        <span className="hidden sm:inline">Siguiente</span> ▶︎
                     </button>
                 </div>
             </div>
