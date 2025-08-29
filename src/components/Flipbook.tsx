@@ -9,6 +9,7 @@ const ReactPageFlip = dynamic(() => import("react-pageflip"), { ssr: false }) as
 type Props = {
     pages: PageImage[];
     containerWidth?: number;
+    containerHeight?: number;
 };
 
 interface FlipBookHandle {
@@ -18,22 +19,20 @@ interface FlipBookHandle {
     };
 }
 
-export default function Flipbook({ pages, containerWidth }: Props) {
+export default function Flipbook({ pages, containerWidth, containerHeight }: Props) {
     const bookRef = useRef<FlipBookHandle | null>(null);
 
     const computeSize = useCallback(() => {
         const first = pages[0];
-        const ratio = first.height / first.width;
-        const screenW =
-            containerWidth && containerWidth > 0
-                ? containerWidth
-                : typeof window !== "undefined"
-                ? window.innerWidth
-                : first.width * 2;
-        const w = Math.floor(screenW / 2);
+        const ratio = first.height / first.width; // height / width of a single page
+        const screenW = containerWidth && containerWidth > 0 ? containerWidth : typeof window !== "undefined" ? window.innerWidth : first.width * 2;
+        const screenH = containerHeight && containerHeight > 0 ? containerHeight : typeof window !== "undefined" ? window.innerHeight : first.height;
+        const wByWidth = Math.floor(screenW / 2);
+        const wByHeight = Math.floor(screenH / ratio);
+        const w = Math.min(wByWidth, wByHeight);
         const h = Math.round(w * ratio);
         return { w, h };
-    }, [pages, containerWidth]);
+    }, [pages, containerWidth, containerHeight]);
 
     const [size, setSize] = useState<{ w: number; h: number }>(() => computeSize());
 

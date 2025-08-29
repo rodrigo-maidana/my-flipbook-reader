@@ -9,6 +9,7 @@ export default function Page() {
     const [error, setError] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [containerWidth, setContainerWidth] = useState(0);
+    const [containerHeight, setContainerHeight] = useState(0);
 
     useEffect(() => {
         const urls = Array.from({ length: 38 }, (_, i) => `/images/Mesa-${String(i + 1).padStart(2, "0")}.png`);
@@ -31,15 +32,16 @@ export default function Page() {
     }, []);
 
     useEffect(() => {
-        const updateWidth = () => {
+        const updateSize = () => {
             setContainerWidth(containerRef.current?.clientWidth ?? window.innerWidth);
+            setContainerHeight(containerRef.current?.clientHeight ?? window.innerHeight);
         };
-        updateWidth();
-        window.addEventListener("resize", updateWidth);
-        document.addEventListener("fullscreenchange", updateWidth);
+        updateSize();
+        window.addEventListener("resize", updateSize);
+        document.addEventListener("fullscreenchange", updateSize);
         return () => {
-            window.removeEventListener("resize", updateWidth);
-            document.removeEventListener("fullscreenchange", updateWidth);
+            window.removeEventListener("resize", updateSize);
+            document.removeEventListener("fullscreenchange", updateSize);
         };
     }, []);
 
@@ -59,7 +61,11 @@ export default function Page() {
             {error && <div className="p-6 text-center text-red-600">{error}</div>}
             {!pages && !error && <div className="p-8 text-center text-neutral-500">Cargando páginas…</div>}
             {pages && pages.length > 0 && (
-                <Flipbook pages={pages} containerWidth={containerWidth} />
+                <Flipbook
+                    pages={pages}
+                    containerWidth={containerWidth}
+                    containerHeight={containerHeight}
+                />
             )}
             <button
                 onClick={enterFullscreen}
