@@ -8,9 +8,10 @@ export default function Page() {
     const [pages, setPages] = useState<PageImage[] | null>(null);
     const [error, setError] = useState<string | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const [containerWidth, setContainerWidth] = useState(0);
 
     useEffect(() => {
-        const urls = Array.from({ length: 40 }, (_, i) => `/images/Mesa-${String(i + 1).padStart(2, "0")}.png`);
+        const urls = Array.from({ length: 38 }, (_, i) => `/images/Mesa-${String(i + 1).padStart(2, "0")}.png`);
         Promise.all(
             urls.map(
                 (url) =>
@@ -29,6 +30,19 @@ export default function Page() {
             });
     }, []);
 
+    useEffect(() => {
+        const updateWidth = () => {
+            setContainerWidth(containerRef.current?.clientWidth ?? window.innerWidth);
+        };
+        updateWidth();
+        window.addEventListener("resize", updateWidth);
+        document.addEventListener("fullscreenchange", updateWidth);
+        return () => {
+            window.removeEventListener("resize", updateWidth);
+            document.removeEventListener("fullscreenchange", updateWidth);
+        };
+    }, []);
+
     const enterFullscreen = () => {
         const el = containerRef.current;
         if (!el) return;
@@ -38,8 +52,8 @@ export default function Page() {
     };
 
     return (
-        <div className="min-h-screen w-full">
-            <main className="mx-auto max-w-6xl px-2 pb-16 pt-6">
+        <div className="min-h-screen w-screen">
+            <main className="mx-auto w-full px-2 pb-16 pt-6">
                 <div
                     ref={containerRef}
                     className="mx-auto flex w-full justify-center rounded-2xl border bg-white p-2 shadow-sm"
@@ -48,7 +62,9 @@ export default function Page() {
                     {!pages && !error && (
                         <div className="p-8 text-center text-neutral-500">Cargando páginas…</div>
                     )}
-                    {pages && pages.length > 0 && <Flipbook pages={pages} />}
+                    {pages && pages.length > 0 && (
+                        <Flipbook pages={pages} containerWidth={containerWidth} />
+                    )}
                 </div>
                 <div className="mt-4 flex justify-center">
                     <button

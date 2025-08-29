@@ -33,7 +33,7 @@ export default function Flipbook({ pages, containerWidth }: Props) {
         const screenH = typeof window !== "undefined" ? window.innerHeight : first.height;
         let w = Math.floor(screenW / 2);
         let h = Math.round(w * ratio);
-        const maxH = Math.floor(screenH * 0.9);
+        const maxH = Math.floor(screenH);
         if (h > maxH) {
             h = maxH;
             w = Math.round(h / ratio);
