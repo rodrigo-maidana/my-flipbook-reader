@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import type { PageImage } from "@/types";
 
@@ -8,6 +8,7 @@ const ReactPageFlip = dynamic(() => import("react-pageflip"), { ssr: false }) as
 
 type Props = {
     pages: PageImage[];
+    containerWidth?: number;
 };
 
 interface FlipBookHandle {
@@ -17,41 +18,39 @@ interface FlipBookHandle {
     };
 }
 
-export default function Flipbook({ pages }: Props) {
+export default function Flipbook({ pages, containerWidth }: Props) {
     const bookRef = useRef<FlipBookHandle | null>(null);
-    const [size, setSize] = useState<{ w: number; h: number }>(() => {
+
+    const computeSize = useCallback(() => {
         const first = pages[0];
         const ratio = first.height / first.width;
-        let w = Math.min(900, first.width);
+        const screenW =
+            containerWidth && containerWidth > 0
+                ? containerWidth
+                : typeof window !== "undefined"
+                ? window.innerWidth
+                : first.width * 2;
+        const screenH = typeof window !== "undefined" ? window.innerHeight : first.height;
+        let w = Math.floor(screenW / 2);
         let h = Math.round(w * ratio);
-        if (typeof window !== "undefined") {
-            const maxH = Math.floor(window.innerHeight * 0.7);
-            if (h > maxH) {
-                h = maxH;
-                w = Math.round(h / ratio);
-            }
+        const maxH = Math.floor(screenH * 0.9);
+        if (h > maxH) {
+            h = maxH;
+            w = Math.round(h / ratio);
         }
         return { w, h };
-    });
+    }, [pages, containerWidth]);
+
+    const [size, setSize] = useState<{ w: number; h: number }>(() => computeSize());
 
     useEffect(() => {
+        setSize(computeSize());
         const onResize = () => {
-            const first = pages[0];
-            const ratio = first.height / first.width;
-            const maxW = Math.min(first.width, Math.floor(window.innerWidth * 0.9));
-            const maxH = Math.floor(window.innerHeight * 0.7);
-            let w = Math.min(900, Math.max(420, maxW));
-            let h = Math.round(w * ratio);
-            if (h > maxH) {
-                h = maxH;
-                w = Math.round(h / ratio);
-            }
-            setSize({ w, h });
+            setSize(computeSize());
         };
-        onResize();
         window.addEventListener("resize", onResize);
         return () => window.removeEventListener("resize", onResize);
-    }, [pages]);
+    }, [computeSize]);
 
     return (
         <div className="flex w-full justify-center">
@@ -68,8 +67,8 @@ export default function Flipbook({ pages }: Props) {
                     style={{}}
                     startPage={0}
                     size="fixed"
-                    minWidth={320}
-                    minHeight={240}
+                    minWidth={120}
+                    minHeight={120}
                     maxWidth={900}
                     maxHeight={1200}
                     drawShadow={true}
