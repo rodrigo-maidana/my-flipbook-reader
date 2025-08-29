@@ -30,14 +30,8 @@ export default function Flipbook({ pages, containerWidth }: Props) {
                 : typeof window !== "undefined"
                 ? window.innerWidth
                 : first.width * 2;
-        const screenH = typeof window !== "undefined" ? window.innerHeight : first.height;
-        let w = Math.floor(screenW / 2);
-        let h = Math.round(w * ratio);
-        const maxH = Math.floor(screenH);
-        if (h > maxH) {
-            h = maxH;
-            w = Math.round(h / ratio);
-        }
+        const w = Math.floor(screenW / 2);
+        const h = Math.round(w * ratio);
         return { w, h };
     }, [pages, containerWidth]);
 
@@ -53,7 +47,7 @@ export default function Flipbook({ pages, containerWidth }: Props) {
     }, [computeSize]);
 
     return (
-        <div className="flex h-full w-full flex-col items-center justify-center">
+        <div className="flex h-full w-full flex-col items-center justify-start">
             <ReactPageFlip
                 ref={bookRef}
                 width={size.w}

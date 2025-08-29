@@ -54,7 +54,7 @@ export default function Page() {
     return (
         <div
             ref={containerRef}
-            className="relative flex h-screen w-screen flex-col items-center justify-center overflow-hidden"
+            className="relative flex h-screen w-screen flex-col items-center justify-start overflow-y-auto"
         >
             {error && <div className="p-6 text-center text-red-600">{error}</div>}
             {!pages && !error && <div className="p-8 text-center text-neutral-500">Cargando páginas…</div>}
@@ -63,7 +63,7 @@ export default function Page() {
             )}
             <button
                 onClick={enterFullscreen}
-                className="absolute bottom-4 rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500"
+                className="fixed bottom-4 left-1/2 -translate-x-1/2 transform rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500"
             >
                 Pantalla completa
             </button>
