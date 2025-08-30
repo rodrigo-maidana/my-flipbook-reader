@@ -41,6 +41,23 @@
 .bookWrap {
     position: relative;
     overflow: visible;
+
+    /* Desktop por defecto: sin estirar (1.00) */
+    --sliver-scale: 1.02;
+}
+
+/* Móvil / pantallas chicas: estirar un poco (1.04) */
+@media (max-width: 768px) {
+    .bookWrap {
+        --sliver-scale: 1.04;
+    }
+}
+
+/* Dispositivos táctiles grandes (tablets, etc.) */
+@media (hover: none) and (pointer: coarse) {
+    .bookWrap {
+        --sliver-scale: 1.04;
+    }
 }
 
 /* grosor escalonado mas alto hacia el centro */
@@ -73,7 +90,8 @@
 .sliver {
     position: absolute;
     top: 50%;
-    transform: translateY(-50%) scaleY(1.04);
+    transform: translateY(-50%) scaleY(var(--sliver-scale, 1));
+    transform-origin: center;
     width: 1px;
     /* grosor de cada linea antes era 3px */
     border-radius: inherit;
