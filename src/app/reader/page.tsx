@@ -119,23 +119,49 @@ export default function Page() {
                     <div
                         aria-hidden
                         className={`
-              pointer-events-none absolute inset-y-8 left-1/2 w-16 -translate-x-1/2
-              rounded-[999px] bg-gradient-to-r from-black/0 via-black/5 to-black/0
-              blur-md opacity-40
-            `}
+            pointer-events-none absolute inset-y-8 left-1/2 w-16 -translate-x-1/2
+            rounded-[999px] bg-gradient-to-r from-black/0 via-black/5 to-black/0
+            blur-md opacity-40
+          `}
                     />
                 </div>
             </div>
 
-            {/* Botón de fullscreen */}
-            <button
-                onClick={toggleFullscreen}
-                className="fixed bottom-4 left-1/2 -translate-x-1/2 transform rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-300 z-50"
+            {/* Botón de fullscreen (simple, sin esquinas redondeadas) */}
+            <div
+                className="pointer-events-none fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
                 style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
-                aria-pressed={isFullscreen}
             >
-                {isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-            </button>
+                <button
+                    onClick={toggleFullscreen}
+                    aria-pressed={isFullscreen}
+                    title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                    className="pointer-events-auto inline-flex items-center gap-2 px-4 py-2 bg-white text-black border border-neutral-300 shadow-md hover:shadow-lg active:translate-y-px focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-300 rounded-none transition"
+                >
+                    {/* Icono */}
+                    {isFullscreen ? (
+                        // Icono "minimizar"
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                                d="M9 3H5a2 2 0 0 0-2 2v4m0 6v4a2 2 0 0 0 2 2h4m6-18h4a2 2 0 0 1 2 2v4m0 6v4a2 2 0 0 1-2 2h-4"
+                                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            />
+                        </svg>
+                    ) : (
+                        // Icono "expandir"
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                                d="M9 3H5a2 2 0 0 0-2 2v4M15 21h4a2 2 0 0 0 2-2v-4M21 9V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4"
+                                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            />
+                        </svg>
+                    )}
+
+                    <span className="text-sm font-medium">
+                        {isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                    </span>
+                </button>
+            </div>
         </div>
     );
 }
