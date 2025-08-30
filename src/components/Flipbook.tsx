@@ -24,25 +24,41 @@ interface FlipBookHandle {
 export default function Flipbook({ pages, containerWidth, containerHeight }: Props) {
     const bookRef = useRef<FlipBookHandle | null>(null);
 
+    // Respeta el ajuste del sistema operativo
+    const [reduceMotion, setReduceMotion] = useState(false);
+    useEffect(() => {
+        const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+        if (!mq) return;
+        setReduceMotion(mq.matches);
+        const onChange = (e: MediaQueryListEvent) => setReduceMotion(e.matches);
+        mq.addEventListener?.('change', onChange);
+        return () => mq.removeEventListener?.('change', onChange);
+    }, []);
+
     const computeSize = useCallback(() => {
         const first = pages[0];
         const ratio = first.height / first.width;
 
-        const screenW =
+        // Medidas “seguras” para evitar negativos/valores raros
+        const safeW =
             containerWidth && containerWidth > 0
                 ? containerWidth
                 : typeof window !== 'undefined'
                     ? window.innerWidth
                     : first.width * 2;
 
-        const screenH =
+        const safeH =
             containerHeight && containerHeight > 0
                 ? containerHeight
                 : typeof window !== 'undefined'
                     ? window.innerHeight
                     : first.height;
 
-        const wByWidth = Math.floor((screenW - 64) / 2);
+        const screenW = Math.max(200, safeW);
+        const screenH = Math.max(200, safeH);
+
+        // Doble página: ancho total del libro = 2 * w
+        const wByWidth = Math.floor((screenW - 64) / 2); // margen para flechas
         const wByHeight = Math.floor((screenH - 32) / ratio);
         const w = Math.max(180, Math.min(wByWidth, wByHeight));
         const h = Math.round(w * ratio);
@@ -85,7 +101,7 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
                 height={size.h}
                 showCover
                 usePortrait={false}
-                flippingTime={650}
+                flippingTime={reduceMotion ? 0 : 650}
                 maxShadowOpacity={0.45}
                 className="flipbook"
                 startPage={0}
@@ -113,6 +129,9 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
                             height={p.height}
                             alt={idx === 0 ? 'Portada' : `Página ${idx}`}
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                            loading={idx < 2 ? 'eager' : 'lazy'}
+                            decoding="async"
+                            draggable={false}
                         />
                     </article>
                 ))}
@@ -121,6 +140,7 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
             {/* Flechas laterales */}
             <button
                 aria-label="Anterior"
+                title="Anterior"
                 onClick={() => bookRef.current?.pageFlip().flipPrev()}
                 className={`
           group absolute left-3 top-1/2 -translate-y-1/2 z-20
@@ -134,7 +154,7 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
             transition-transform group-hover:-translate-x-0.5
           `}
                 >
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </span>
@@ -142,6 +162,7 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
 
             <button
                 aria-label="Siguiente"
+                title="Siguiente"
                 onClick={() => bookRef.current?.pageFlip().flipNext()}
                 className={`
           group absolute right-3 top-1/2 -translate-y-1/2 z-20
@@ -155,7 +176,7 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
             transition-transform group-hover:translate-x-0.5
           `}
                 >
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                 </span>

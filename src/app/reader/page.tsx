@@ -94,7 +94,7 @@ export default function Page() {
     return (
         <div
             ref={containerRef}
-            // ahora el fondo es blanco a pantalla completa
+            // fondo blanco a pantalla completa
             className="relative flex h-[100dvh] w-[100dvw] items-center justify-center bg-white text-black"
         >
             {/* Stage full-bleed sin sombra ni borde */}
@@ -109,9 +109,9 @@ export default function Page() {
                         <Flipbook
                             key={remountKey}
                             pages={pages}
-                            // usamos casi todo el espacio, dejando un pequeño padding para flechas/márgenes
-                            containerWidth={containerWidth - 32}
-                            containerHeight={containerHeight - 32}
+                            // clampeo para evitar negativos en pantallas muy pequeñas
+                            containerWidth={Math.max(120, containerWidth - 32)}
+                            containerHeight={Math.max(120, containerHeight - 32)}
                         />
                     )}
 
