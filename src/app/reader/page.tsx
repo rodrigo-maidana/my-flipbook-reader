@@ -11,6 +11,7 @@ export default function Page() {
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [containerWidth, setContainerWidth] = useState(0);
     const [containerHeight, setContainerHeight] = useState(0);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     useEffect(() => {
         const urls = Array.from({ length: 38 }, (_, i) => `/images/Mesa-${String(i + 1).padStart(2, "0")}.png`);
@@ -61,11 +62,39 @@ export default function Page() {
         };
     }, []);
 
-    const enterFullscreen = () => {
-        const el = containerRef.current;
+    // 🔲 Toggle fullscreen (con fallback para Safari)
+    const toggleFullscreen = () => {
+        const el = containerRef.current as any;
         if (!el) return;
+
+        const doc: any = document;
+
+        if (doc.fullscreenElement === el || doc.webkitFullscreenElement === el) {
+            if (doc.exitFullscreen) doc.exitFullscreen();
+            else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+            return;
+        }
+
         if (el.requestFullscreen) el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     };
+
+    // Escucha cambios de fullscreen para actualizar la UI
+    useEffect(() => {
+        const handler = () => {
+            const el = containerRef.current as any;
+            const fsEl = (document as any).fullscreenElement || (document as any).webkitFullscreenElement;
+            setIsFullscreen(fsEl === el);
+        };
+        document.addEventListener("fullscreenchange", handler);
+        // Safari
+        document.addEventListener("webkitfullscreenchange", handler);
+        handler();
+        return () => {
+            document.removeEventListener("fullscreenchange", handler);
+            document.removeEventListener("webkitfullscreenchange", handler);
+        };
+    }, []);
 
     // Plan B: fuerza remount si un navegador no actualiza internamente
     const remountKey = `${containerWidth}x${containerHeight}`;
@@ -73,7 +102,8 @@ export default function Page() {
     return (
         <div
             ref={containerRef}
-            className="relative flex h-screen w-screen flex-col items-center justify-start overflow-y-auto"
+            // Fondo SIEMPRE blanco + texto negro. Cubrimos viewport con dvh/dvw para móviles.
+            className="relative flex h-[100dvh] w-[100dvw] flex-col items-center justify-start overflow-y-auto bg-white text-black"
         >
             {error && <div className="p-6 text-center text-red-600">{error}</div>}
             {!pages && !error && <div className="p-8 text-center text-neutral-500">Cargando páginas…</div>}
@@ -90,10 +120,14 @@ export default function Page() {
             )}
 
             <button
-                onClick={enterFullscreen}
-                className="fixed bottom-4 left-1/2 -translate-x-1/2 transform rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500"
+                onClick={toggleFullscreen}
+                // z-50 para que nunca quede por detrás del flipbook; foco visible para accesibilidad
+                className="fixed bottom-4 left-1/2 -translate-x-1/2 transform rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-300 z-50"
+                // Respeta el notch en iOS
+                style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+                aria-pressed={isFullscreen}
             >
-                Pantalla completa
+                {isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
             </button>
         </div>
     );
