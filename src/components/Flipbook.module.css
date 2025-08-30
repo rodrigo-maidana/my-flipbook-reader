@@ -74,11 +74,11 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 2px;
+    width: 1px;
     /* grosor de cada linea antes era 3px */
     border-radius: inherit;
     background: linear-gradient(#c1c6cd, #aab0b8);
-    border-left: 1px solid #9ea4ad;
+    border-left: 1px solid #d1d1d1;
     border-right: 1px solid #ffffff;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
 }
