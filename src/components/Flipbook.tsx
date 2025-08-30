@@ -24,11 +24,10 @@ interface FlipBookHandle {
 export default function Flipbook({ pages, containerWidth, containerHeight }: Props) {
     const bookRef = useRef<FlipBookHandle | null>(null);
 
-    // Página actual para ocultar/mostrar el grosor lateral
+    // Página actual => decide cuántas "líneas" (slivers) mostrar a cada lado
     const [pageIndex, setPageIndex] = useState(0);
-    const atStart = pageIndex === 0;
-    const atEnd = pageIndex >= pages.length - 1;
 
+    // Reglas de tamaño del libro
     const computeSize = useCallback(() => {
         const first = pages[0];
         const ratio = first.height / first.width;
@@ -64,6 +63,7 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
         return () => window.removeEventListener('resize', onResize);
     }, [computeSize]);
 
+    // Forzar update de tamaño interno
     useEffect(() => {
         const id = requestAnimationFrame(() => {
             try {
@@ -73,7 +73,7 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
         return () => cancelAnimationFrame(id);
     }, [size.w, size.h]);
 
-    // Teclado
+    // Navegación con teclado
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft') bookRef.current?.pageFlip().flipPrev();
@@ -95,26 +95,41 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
         return () => cancelAnimationFrame(raf);
     }, []);
 
+    // ---------- LÓGICA DE APARICIÓN PROGRESIVA ----------
+    // Máximo de líneas
+    const MAX = 4;
+
+    // Lado izquierdo (profundidad desde el inicio con cover):
+    // 0 (cover y 2–3), 1 (4–5), 2 (6–7), 3 (8–9), 4 (10–11 en adelante)
+    const leftCount = Math.max(0, Math.min(MAX, Math.floor((pageIndex - 1) / 2)));
+
+    // Lado derecho: simétrico hacia el final (considera la contratapa sola)
+    // 0 en última vista (N-2,N-1) y última página (N-1),
+    // 1 en (N-4,N-3), ... hasta llegar a 4 y mantener.
+    const rightCount = Math.max(0, Math.min(MAX, Math.floor((pages.length - 2 - pageIndex) / 2)));
+
+    // Render auxiliar de slivers según cantidad
+    const sliverClasses = ['s1', 's2', 's3', 's4'];
+
     return (
         <div className="relative flex h-full w-full items-center justify-center">
             {/* Wrapper del libro + borde de “hojas” */}
             <div className="book-wrap relative" style={{ width: size.w * 2, height: size.h, overflow: 'visible' }}>
-                {/* Grosor escalonado: oculto izquierda en portada, derecha en última */}
-                {!atStart && (
+                {/* Grosor escalonado dinámico */}
+                {leftCount > 0 && (
                     <div className="edge edge-left" aria-hidden>
-                        <span className="sliver s1" />
-                        <span className="sliver s2" />
-                        <span className="sliver s3" />
-                        <span className="sliver s4" />
+                        {sliverClasses.slice(0, leftCount).map((c) => (
+                            <span key={`L-${c}`} className={`sliver ${c}`} />
+                        ))}
                         <span className="trim-line" />
                     </div>
                 )}
-                {!atEnd && (
+
+                {rightCount > 0 && (
                     <div className="edge edge-right" aria-hidden>
-                        <span className="sliver s1" />
-                        <span className="sliver s2" />
-                        <span className="sliver s3" />
-                        <span className="sliver s4" />
+                        {sliverClasses.slice(0, rightCount).map((c) => (
+                            <span key={`R-${c}`} className={`sliver ${c}`} />
+                        ))}
                         <span className="trim-line" />
                     </div>
                 )}
@@ -144,8 +159,7 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
                     mobileScrollSupport
                     showPageCorners
                     disableFlipByClick={false}
-                    // 👉 actualiza el índice al voltear página
-                    onFlip={(e: any) => setPageIndex(e.data)}
+                    onFlip={(e: any) => setPageIndex(e.data)}   // ← actualiza el índice
                 >
                     {pages.map((p, idx) => (
                         <article key={idx} className="page shadow">
