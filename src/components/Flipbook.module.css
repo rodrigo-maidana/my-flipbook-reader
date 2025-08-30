@@ -73,7 +73,7 @@
 .sliver {
     position: absolute;
     top: 50%;
-    transform: translateY(-50%);
+    transform: translateY(-50%) scaleY(1.04);
     width: 1px;
     /* grosor de cada linea antes era 3px */
     border-radius: inherit;
@@ -85,84 +85,84 @@
 
 /* alturas s1 mas alta luego decrecen uno por ciento */
 .s1 {
-    height: 102%;
-}
-
-.s2 {
-    height: 101%;
-}
-
-.s3 {
     height: 100%;
 }
 
-.s4 {
+.s2 {
     height: 99%;
 }
 
-.s5 {
+.s3 {
     height: 98%;
 }
 
-.s6 {
+.s4 {
     height: 97%;
 }
 
-.s7 {
+.s5 {
     height: 96%;
 }
 
-.s8 {
+.s6 {
     height: 95%;
 }
 
-.s9 {
+.s7 {
     height: 94%;
 }
 
-.s10 {
+.s8 {
     height: 93%;
 }
 
-/* Lado derecho, posiciones mantiene paso 2 y offset inicial 35 */
+.s9 {
+    height: 92%;
+}
+
+.s10 {
+    height: 91%;
+}
+
+/* Lado derecho, posiciones mantiene paso 2 y offset inicial 34 */
 .edgeRight .s1 {
-    left: 35px;
+    left: 34px;
 }
 
 .edgeRight .s2 {
-    left: 37px;
+    left: 36px;
 }
 
 .edgeRight .s3 {
-    left: 39px;
+    left: 38px;
 }
 
 .edgeRight .s4 {
-    left: 41px;
+    left: 40px;
 }
 
 .edgeRight .s5 {
-    left: 43px;
+    left: 42px;
 }
 
 .edgeRight .s6 {
-    left: 45px;
+    left: 44px;
 }
 
 .edgeRight .s7 {
-    left: 47px;
+    left: 46px;
 }
 
 .edgeRight .s8 {
-    left: 49px;
+    left: 48px;
 }
 
 .edgeRight .s9 {
-    left: 51px;
+    left: 50px;
 }
 
 .edgeRight .s10 {
-    left: 53px;
+    left: 52px;
 }
 
 /* Lado izquierdo, posiciones mantiene paso 2 y offset inicial 34 */
