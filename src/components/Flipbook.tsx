@@ -1,11 +1,12 @@
-"use client";
+// src/components/Flipbook.tsx
+'use client';
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
-import type { PageImage } from "@/types";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
+import type { PageImage } from '@/types';
+import styles from './Flipbook.module.css';
 
-// Import dinámico (SSR off). Tipado relajado para usar ref.pageFlip().update(...)
-const ReactPageFlip = dynamic(() => import("react-pageflip"), { ssr: false }) as unknown as typeof import("react-pageflip").default;
+const ReactPageFlip = dynamic(() => import('react-pageflip'), { ssr: false }) as unknown as typeof import('react-pageflip').default;
 
 type Props = {
     pages: PageImage[];
@@ -18,34 +19,59 @@ interface FlipBookHandle {
         flipPrev: () => void;
         flipNext: () => void;
         update: (opts: { width?: number; height?: number }) => void;
+        getCurrentPageIndex?: () => number;
     };
 }
 
 export default function Flipbook({ pages, containerWidth, containerHeight }: Props) {
     const bookRef = useRef<FlipBookHandle | null>(null);
+    const [pageIndex, setPageIndex] = useState(0);
 
+    // ---------- SONIDO DE PASAR PÁGINA ----------
+    // Colocar el archivo en: public/sounds/page_turn.mp3
+    const TURN_SOUND_SRC = '/sounds/page_turn.mp3';
+    const turnSoundRef = useRef<HTMLAudioElement | null>(null);
+
+    useEffect(() => {
+        const a = new Audio(TURN_SOUND_SRC);
+        a.preload = 'auto';
+        a.volume = 0.2;
+        turnSoundRef.current = a;
+    }, []);
+
+    const playTurnSound = useCallback(() => {
+        const base = turnSoundRef.current;
+        if (!base) return;
+        try {
+            const clone = base.cloneNode(true) as HTMLAudioElement;
+            clone.volume = base.volume;
+            void clone.play();
+        } catch { }
+    }, []);
+    // --------------------------------------------
+
+    // cálculo de tamaño del libro
     const computeSize = useCallback(() => {
         const first = pages[0];
-        const ratio = first.height / first.width; // alto/ancho de una sola página
+        const ratio = first.height / first.width;
 
         const screenW =
             containerWidth && containerWidth > 0
                 ? containerWidth
-                : typeof window !== "undefined"
+                : typeof window !== 'undefined'
                     ? window.innerWidth
                     : first.width * 2;
 
         const screenH =
             containerHeight && containerHeight > 0
                 ? containerHeight
-                : typeof window !== "undefined"
+                : typeof window !== 'undefined'
                     ? window.innerHeight
                     : first.height;
 
-        // Doble página: ancho total del libro = 2 * w
-        const wByWidth = Math.floor(screenW / 2);
-        const wByHeight = Math.floor(screenH / ratio);
-        const w = Math.min(wByWidth, wByHeight);
+        const wByWidth = Math.floor((screenW - 64) / 2);
+        const wByHeight = Math.floor((screenH - 32) / ratio);
+        const w = Math.max(180, Math.min(wByWidth, wByHeight));
         const h = Math.round(w * ratio);
 
         return { w, h };
@@ -53,93 +79,141 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
 
     const [size, setSize] = useState<{ w: number; h: number }>(() => computeSize());
 
-    // Ajusta el tamaño local si cambian los inputs
     useEffect(() => {
         setSize(computeSize());
         const onResize = () => setSize(computeSize());
-        window.addEventListener("resize", onResize);
-        return () => window.removeEventListener("resize", onResize);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
     }, [computeSize]);
 
-    // 👉 Recalcula internamente el flipbook cuando cambia width/height
+    // forzar update de tamaño interno
     useEffect(() => {
         const id = requestAnimationFrame(() => {
             try {
                 bookRef.current?.pageFlip().update({ width: size.w, height: size.h });
-            } catch {
-                // puede no estar listo el ref en el primer render; no pasa nada
-            }
+            } catch { }
         });
         return () => cancelAnimationFrame(id);
     }, [size.w, size.h]);
 
-    return (
-        <div className="flex h-full w-full flex-col items-center justify-start">
-            <ReactPageFlip
-                ref={bookRef}
-                width={size.w}
-                height={size.h}
-                showCover
-                usePortrait={false}          // fuerza 2 páginas siempre
-                flippingTime={700}
-                maxShadowOpacity={0.5}
-                className="flipbook"
-                startPage={0}
-                size="fixed"
-                minWidth={120}
-                minHeight={120}
-                // 🔧 TS exige estos props; valores “grandes” para no limitar
-                style={{}}
-                maxWidth={Number.MAX_SAFE_INTEGER}
-                maxHeight={Number.MAX_SAFE_INTEGER}
-                drawShadow
-                useMouseEvents
-                clickEventForward
-                swipeDistance={30}
-                startZIndex={0}
-                autoSize={false}
-                mobileScrollSupport
-                showPageCorners
-                disableFlipByClick={false}
-            >
-                {pages.map((p, idx) => (
-                    <article key={idx} className="page shadow">
-                        <img
-                            src={p.url}
-                            width={p.width}
-                            height={p.height}
-                            alt={idx === 0 ? "Portada" : `Página ${idx}`}
-                            style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                        />
-                    </article>
-                ))}
-            </ReactPageFlip>
+    // navegación con teclado (ya no reproducimos sonido aquí)
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') bookRef.current?.pageFlip().flipPrev();
+            if (e.key === 'ArrowRight') bookRef.current?.pageFlip().flipNext();
+        };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, []);
 
-            <div className="mt-4 flex items-center justify-center gap-4">
-                <button
-                    className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500"
-                    onClick={() => bookRef.current?.pageFlip().flipPrev()}
+    // inicializar pageIndex
+    useEffect(() => {
+        const raf = requestAnimationFrame(() => {
+            try {
+                const api: any = bookRef.current?.pageFlip();
+                const cur = api?.getCurrentPageIndex?.() ?? 0;
+                setPageIndex(cur);
+            } catch { }
+        });
+        return () => cancelAnimationFrame(raf);
+    }, []);
+
+    // lógica de aparición progresiva (hasta 10 líneas por lado)
+    const MAX = 10;
+    const leftCount = Math.max(0, Math.min(MAX, Math.floor((pageIndex - 1) / 2)));
+    const rightCount = Math.max(0, Math.min(MAX, Math.floor((pages.length - 2 - pageIndex) / 2)));
+    const sliverClasses = Array.from({ length: MAX }, (_, i) => `s${i + 1}`);
+
+    return (
+        <div className={styles.container}>
+            <div className={styles.bookWrap} style={{ width: size.w * 2, height: size.h }}>
+                {leftCount > 0 && (
+                    <div className={`${styles.edge} ${styles.edgeLeft}`} aria-hidden>
+                        {sliverClasses.slice(0, leftCount).map((c) => (
+                            <span key={`L-${c}`} className={`${styles.sliver} ${styles[c as keyof typeof styles]}`} />
+                        ))}
+                        <span className={styles.trimLine} />
+                    </div>
+                )}
+
+                {rightCount > 0 && (
+                    <div className={`${styles.edge} ${styles.edgeRight}`} aria-hidden>
+                        {sliverClasses.slice(0, rightCount).map((c) => (
+                            <span key={`R-${c}`} className={`${styles.sliver} ${styles[c as keyof typeof styles]}`} />
+                        ))}
+                        <span className={styles.trimLine} />
+                    </div>
+                )}
+
+                <ReactPageFlip
+                    ref={bookRef}
+                    width={size.w}
+                    height={size.h}
+                    showCover
+                    usePortrait={false}
+                    flippingTime={650}
+                    maxShadowOpacity={0.45}
+                    className={styles.flipbook}
+                    startPage={0}
+                    size="fixed"
+                    minWidth={120}
+                    minHeight={120}
+                    style={{}}
+                    maxWidth={Number.MAX_SAFE_INTEGER}
+                    maxHeight={Number.MAX_SAFE_INTEGER}
+                    drawShadow
+                    useMouseEvents
+                    clickEventForward
+                    swipeDistance={28}
+                    startZIndex={0}
+                    autoSize={false}
+                    mobileScrollSupport
+                    showPageCorners
+                    disableFlipByClick={false}
+                    onFlip={(e: any) => {
+                        setPageIndex(e.data);
+                        // Reproducimos el sonido SOLO aquí → 1 vez por cambio de página
+                        playTurnSound();
+                    }}
                 >
-                    ◀︎ <span className="hidden sm:inline">Anterior</span>
-                </button>
-                <button
-                    className="flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500"
-                    onClick={() => bookRef.current?.pageFlip().flipNext()}
-                >
-                    <span className="hidden sm:inline">Siguiente</span> ▶︎
-                </button>
+                    {pages.map((p, idx) => (
+                        <article key={idx} className={`${styles.page} ${styles.shadow}`}>
+                            <img
+                                src={p.url}
+                                width={p.width}
+                                height={p.height}
+                                alt={idx === 0 ? 'Portada' : `Página ${idx}`}
+                                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                draggable={false}
+                            />
+                        </article>
+                    ))}
+                </ReactPageFlip>
             </div>
 
-            <style jsx>{`
-        .flipbook .page {
-          background: #fff;
-          border-radius: 14px;
-          overflow: hidden;
-        }
-        .shadow {
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
-        }
-      `}</style>
+            <button
+                aria-label="Anterior"
+                onClick={() => bookRef.current?.pageFlip().flipPrev()}
+                className="group absolute left-3 top-1/2 -translate-y-1/2 z-20 rounded-full bg-white/90 p-2 shadow-lg ring-1 ring-black/10 hover:bg-white hover:shadow-xl active:scale-95 backdrop-blur"
+            >
+                <span className="grid h-10 w-10 place-items-center rounded-full transition-transform group-hover:-translate-x-0.5">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </span>
+            </button>
+
+            <button
+                aria-label="Siguiente"
+                onClick={() => bookRef.current?.pageFlip().flipNext()}
+                className="group absolute right-3 top-1/2 -translate-y-1/2 z-20 rounded-full bg-white/90 p-2 shadow-lg ring-1 ring-black/10 hover:bg-white hover:shadow-xl active:scale-95 backdrop-blur"
+            >
+                <span className="grid h-10 w-10 place-items-center rounded-full transition-transform group-hover:translate-x-0.5">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </span>
+            </button>
         </div>
     );
 }

@@ -1,0 +1,244 @@
+/* src/components/Flipbook.module.css */
+
+/* contenedor base */
+.container {
+    position: relative;
+    display: flex;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+/* el flipbook va por encima del grosor */
+.flipbook {
+    position: relative;
+    z-index: 2;
+}
+
+/* paginas */
+.page {
+    background: #fff;
+    border-radius: 0px;
+    overflow: hidden;
+    position: relative;
+}
+
+.page::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(120% 100% at 50% 50%, rgba(0, 0, 0, 0.08) 0%, transparent 55%);
+    opacity: 0.07;
+}
+
+.shadow {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* wrapper del libro y borde de hojas */
+.bookWrap {
+    position: relative;
+    overflow: visible;
+
+    /* Desktop por defecto: sin estirar (1.00) */
+    --sliver-scale: 1.02;
+}
+
+/* Móvil / pantallas chicas: estirar un poco (1.04) */
+@media (max-width: 768px) {
+    .bookWrap {
+        --sliver-scale: 1.04;
+    }
+}
+
+/* Dispositivos táctiles grandes (tablets, etc.) */
+@media (hover: none) and (pointer: coarse) {
+    .bookWrap {
+        --sliver-scale: 1.04;
+    }
+}
+
+/* grosor escalonado mas alto hacia el centro */
+.edge {
+    position: absolute;
+    z-index: 1;
+    /* debajo del libro */
+    top: 6px;
+    bottom: 6px;
+    width: 52px;
+    /* ancho del bloque de hojas soporta 10 lineas con paso 4px */
+    pointer-events: none;
+}
+
+.edgeLeft {
+    left: -18px;
+    border-radius: 12px 0 0 12px;
+}
+
+.edgeRight {
+    right: -18px;
+    border-radius: 0 12px 12px 0;
+}
+
+/* barras laterales
+   aqui modificas el grosor
+   para cambiar grosor de cada linea ajusta width
+   para cambiar perfil del lomo ajusta height en s1 a s10
+*/
+.sliver {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) scaleY(var(--sliver-scale, 1));
+    transform-origin: center;
+    width: 1px;
+    /* grosor de cada linea antes era 3px */
+    border-radius: inherit;
+    background: linear-gradient(#c1c6cd, #aab0b8);
+    border-left: 1px solid #d1d1d1;
+    border-right: 1px solid #ffffff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+
+/* alturas s1 mas alta luego decrecen uno por ciento */
+.s1 {
+    height: 100%;
+}
+
+.s2 {
+    height: 99%;
+}
+
+.s3 {
+    height: 98%;
+}
+
+.s4 {
+    height: 97%;
+}
+
+.s5 {
+    height: 96%;
+}
+
+.s6 {
+    height: 95%;
+}
+
+.s7 {
+    height: 94%;
+}
+
+.s8 {
+    height: 93%;
+}
+
+.s9 {
+    height: 92%;
+}
+
+.s10 {
+    height: 91%;
+}
+
+/* Lado derecho, posiciones mantiene paso 2 y offset inicial 34 */
+.edgeRight .s1 {
+    left: 34px;
+}
+
+.edgeRight .s2 {
+    left: 36px;
+}
+
+.edgeRight .s3 {
+    left: 38px;
+}
+
+.edgeRight .s4 {
+    left: 40px;
+}
+
+.edgeRight .s5 {
+    left: 42px;
+}
+
+.edgeRight .s6 {
+    left: 44px;
+}
+
+.edgeRight .s7 {
+    left: 46px;
+}
+
+.edgeRight .s8 {
+    left: 48px;
+}
+
+.edgeRight .s9 {
+    left: 50px;
+}
+
+.edgeRight .s10 {
+    left: 52px;
+}
+
+/* Lado izquierdo, posiciones mantiene paso 2 y offset inicial 34 */
+.edgeLeft .s1 {
+    right: 34px;
+}
+
+.edgeLeft .s2 {
+    right: 36px;
+}
+
+.edgeLeft .s3 {
+    right: 38px;
+}
+
+.edgeLeft .s4 {
+    right: 40px;
+}
+
+.edgeLeft .s5 {
+    right: 42px;
+}
+
+.edgeLeft .s6 {
+    right: 44px;
+}
+
+.edgeLeft .s7 {
+    right: 46px;
+}
+
+.edgeLeft .s8 {
+    right: 48px;
+}
+
+.edgeLeft .s9 {
+    right: 50px;
+}
+
+.edgeLeft .s10 {
+    right: 52px;
+}
+
+/* lineas de corte */
+.edgeRight .trimLine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.18));
+}
+
+.edgeLeft .trimLine {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 1px;
+    background: linear-gradient(to left, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.18));
+}

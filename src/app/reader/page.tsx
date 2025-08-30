@@ -1,8 +1,9 @@
-"use client";
+// src/app/reader/page.tsx
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import Flipbook from "@/components/Flipbook";
-import type { PageImage } from "@/types";
+import { useEffect, useRef, useState } from 'react';
+import Flipbook from '@/components/Flipbook';
+import type { PageImage } from '@/types';
 
 export default function Page() {
     const [pages, setPages] = useState<PageImage[] | null>(null);
@@ -14,7 +15,7 @@ export default function Page() {
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     useEffect(() => {
-        const urls = Array.from({ length: 38 }, (_, i) => `/images/Mesa-${String(i + 1).padStart(2, "0")}.png`);
+        const urls = Array.from({ length: 38 }, (_, i) => `/images/Mesa-${String(i + 1).padStart(2, '0')}.png`);
         Promise.all(
             urls.map(
                 (url) =>
@@ -29,11 +30,10 @@ export default function Page() {
             .then(setPages)
             .catch((e) => {
                 console.error(e);
-                setError("No se pudieron cargar las imágenes.");
+                setError('No se pudieron cargar las imágenes.');
             });
     }, []);
 
-    // 🧭 Medimos el contenedor con ResizeObserver (robusto en rotación)
     useEffect(() => {
         const el = containerRef.current;
         if (!el) return;
@@ -48,25 +48,21 @@ export default function Page() {
         });
 
         ro.observe(el);
-
         const bump = () => {
             setContainerWidth(el.clientWidth);
             setContainerHeight(el.clientHeight);
         };
-        window.addEventListener("orientationchange", bump);
-        bump(); // primer cálculo
-
+        window.addEventListener('orientationchange', bump);
+        bump();
         return () => {
             ro.disconnect();
-            window.removeEventListener("orientationchange", bump);
+            window.removeEventListener('orientationchange', bump);
         };
     }, []);
 
-    // 🔲 Toggle fullscreen (con fallback para Safari)
     const toggleFullscreen = () => {
         const el = containerRef.current as any;
         if (!el) return;
-
         const doc: any = document;
 
         if (doc.fullscreenElement === el || doc.webkitFullscreenElement === el) {
@@ -74,61 +70,98 @@ export default function Page() {
             else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
             return;
         }
-
         if (el.requestFullscreen) el.requestFullscreen();
         else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
     };
 
-    // Escucha cambios de fullscreen para actualizar la UI
     useEffect(() => {
         const handler = () => {
             const el = containerRef.current as any;
             const fsEl = (document as any).fullscreenElement || (document as any).webkitFullscreenElement;
             setIsFullscreen(fsEl === el);
         };
-        document.addEventListener("fullscreenchange", handler);
-        // Safari
-        document.addEventListener("webkitfullscreenchange", handler);
+        document.addEventListener('fullscreenchange', handler);
+        document.addEventListener('webkitfullscreenchange', handler);
         handler();
         return () => {
-            document.removeEventListener("fullscreenchange", handler);
-            document.removeEventListener("webkitfullscreenchange", handler);
+            document.removeEventListener('fullscreenchange', handler);
+            document.removeEventListener('webkitfullscreenchange', handler);
         };
     }, []);
 
-    // Plan B: fuerza remount si un navegador no actualiza internamente
     const remountKey = `${containerWidth}x${containerHeight}`;
 
     return (
         <div
             ref={containerRef}
-            // Fondo SIEMPRE blanco + texto negro. Cubrimos viewport con dvh/dvw para móviles.
-            className="relative flex h-[100dvh] w-[100dvw] flex-col items-center justify-start overflow-y-auto bg-white text-black"
+            // fondo blanco a pantalla completa
+            className="relative flex h-[100dvh] w-[100dvw] items-center justify-center bg-white text-black"
         >
-            {error && <div className="p-6 text-center text-red-600">{error}</div>}
-            {!pages && !error && <div className="p-8 text-center text-neutral-500">Cargando páginas…</div>}
+            {/* Stage full-bleed sin sombra ni borde */}
+            <div className="relative mx-auto flex h-full w-full items-center justify-center p-4">
+                <div className="book-stage absolute inset-0 flex items-center justify-center">
+                    {error && <div className="p-6 text-center text-red-600">{error}</div>}
+                    {!pages && !error && (
+                        <div className="rounded-lg bg-neutral-100 px-6 py-3 text-neutral-600 shadow-inner">Cargando páginas…</div>
+                    )}
 
-            {pages && pages.length > 0 && (
-                <div className="flex-1 flex items-center justify-center w-full">
-                    <Flipbook
-                        key={remountKey}
-                        pages={pages}
-                        containerWidth={containerWidth}
-                        containerHeight={containerHeight}
+                    {pages && pages.length > 0 && (
+                        <Flipbook
+                            key={remountKey}
+                            pages={pages}
+                            // clampeo para evitar negativos en pantallas muy pequeñas
+                            containerWidth={Math.max(120, containerWidth - 32)}
+                            containerHeight={Math.max(120, containerHeight - 32)}
+                        />
+                    )}
+
+                    {/* spine opcional, muy sutil (puedes borrar este div si no lo querés) */}
+                    <div
+                        aria-hidden
+                        className={`
+            pointer-events-none absolute inset-y-8 left-1/2 w-16 -translate-x-1/2
+            rounded-[999px] bg-gradient-to-r from-black/0 via-black/5 to-black/0
+            blur-md opacity-40
+          `}
                     />
                 </div>
-            )}
+            </div>
 
-            <button
-                onClick={toggleFullscreen}
-                // z-50 para que nunca quede por detrás del flipbook; foco visible para accesibilidad
-                className="fixed bottom-4 left-1/2 -translate-x-1/2 transform rounded-full bg-indigo-600 px-5 py-2 text-white shadow hover:bg-indigo-500 focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-300 z-50"
-                // Respeta el notch en iOS
-                style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
-                aria-pressed={isFullscreen}
+            {/* Botón de fullscreen (simple, sin esquinas redondeadas) */}
+            <div
+                className="pointer-events-none fixed bottom-4 left-1/2 z-50 -translate-x-1/2"
+                style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
             >
-                {isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
-            </button>
+                <button
+                    onClick={toggleFullscreen}
+                    aria-pressed={isFullscreen}
+                    title={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                    className="pointer-events-auto inline-flex items-center gap-2 px-4 py-2 bg-white text-black border border-neutral-300 shadow-md hover:shadow-lg active:translate-y-px focus:outline-none focus-visible:ring-4 focus-visible:ring-indigo-300 rounded-none transition"
+                >
+                    {/* Icono */}
+                    {isFullscreen ? (
+                        // Icono "minimizar"
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                                d="M9 3H5a2 2 0 0 0-2 2v4m0 6v4a2 2 0 0 0 2 2h4m6-18h4a2 2 0 0 1 2 2v4m0 6v4a2 2 0 0 1-2 2h-4"
+                                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            />
+                        </svg>
+                    ) : (
+                        // Icono "expandir"
+                        <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                                d="M9 3H5a2 2 0 0 0-2 2v4M15 21h4a2 2 0 0 0 2-2v-4M21 9V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4"
+                                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            />
+                        </svg>
+                    )}
+
+                    <span className="text-sm font-medium">
+                        {isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+                    </span>
+                </button>
+            </div>
         </div>
     );
 }
