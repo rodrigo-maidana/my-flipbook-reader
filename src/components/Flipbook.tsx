@@ -27,7 +27,30 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
     const bookRef = useRef<FlipBookHandle | null>(null);
     const [pageIndex, setPageIndex] = useState(0);
 
-    // calculo de tamaño del libro
+    // ---------- SONIDO DE PASAR PÁGINA ----------
+    // Colocar el archivo en: public/sounds/page_turn.mp3
+    const TURN_SOUND_SRC = '/sounds/page_turn.mp3';
+    const turnSoundRef = useRef<HTMLAudioElement | null>(null);
+
+    useEffect(() => {
+        const a = new Audio(TURN_SOUND_SRC);
+        a.preload = 'auto';
+        a.volume = 0.2;
+        turnSoundRef.current = a;
+    }, []);
+
+    const playTurnSound = useCallback(() => {
+        const base = turnSoundRef.current;
+        if (!base) return;
+        try {
+            const clone = base.cloneNode(true) as HTMLAudioElement;
+            clone.volume = base.volume;
+            void clone.play();
+        } catch { }
+    }, []);
+    // --------------------------------------------
+
+    // cálculo de tamaño del libro
     const computeSize = useCallback(() => {
         const first = pages[0];
         const ratio = first.height / first.width;
@@ -73,7 +96,7 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
         return () => cancelAnimationFrame(id);
     }, [size.w, size.h]);
 
-    // navegacion con teclado
+    // navegación con teclado (ya no reproducimos sonido aquí)
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'ArrowLeft') bookRef.current?.pageFlip().flipPrev();
@@ -95,17 +118,10 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
         return () => cancelAnimationFrame(raf);
     }, []);
 
-    // logica de aparicion progresiva
-    // soporta hasta 10 lineas por lado
+    // lógica de aparición progresiva (hasta 10 líneas por lado)
     const MAX = 10;
-
-    // lado izquierdo
     const leftCount = Math.max(0, Math.min(MAX, Math.floor((pageIndex - 1) / 2)));
-
-    // lado derecho
     const rightCount = Math.max(0, Math.min(MAX, Math.floor((pages.length - 2 - pageIndex) / 2)));
-
-    // clases s1 a s10
     const sliverClasses = Array.from({ length: MAX }, (_, i) => `s${i + 1}`);
 
     return (
@@ -154,7 +170,11 @@ export default function Flipbook({ pages, containerWidth, containerHeight }: Pro
                     mobileScrollSupport
                     showPageCorners
                     disableFlipByClick={false}
-                    onFlip={(e: any) => setPageIndex(e.data)}
+                    onFlip={(e: any) => {
+                        setPageIndex(e.data);
+                        // Reproducimos el sonido SOLO aquí → 1 vez por cambio de página
+                        playTurnSound();
+                    }}
                 >
                     {pages.map((p, idx) => (
                         <article key={idx} className={`${styles.page} ${styles.shadow}`}>
